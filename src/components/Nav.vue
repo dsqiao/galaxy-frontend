@@ -28,6 +28,8 @@ export default {
       fileUploader.addEventListener('change', this.handleImportFiles)
       fileUploader.click()
     },
+    newf () {
+    },
     handleImportFiles (event) {
       const _this = this
       const file = event.target.files[0]
