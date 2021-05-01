@@ -3,8 +3,13 @@
 </template>
 
 <script>
+import * as d3 from 'd3'
 export default {
-  name: 'GraphContainer'
+  name: 'GraphContainer',
+  mounted: function () {
+    const graphContainer = d3.select('#graphContainer')
+    console.log(graphContainer)
+  }
 }
 </script>
 

@@ -28,8 +28,6 @@ export default {
       fileUploader.addEventListener('change', this.handleImportFiles)
       fileUploader.click()
     },
-    newf () {
-    },
     handleImportFiles (event) {
       const _this = this
       const file = event.target.files[0]
@@ -61,8 +59,10 @@ export default {
 <style scoped>
 #nav {
   background-color: rgba(17, 121, 179, 0.8);
-  height: 8%;
   display: flex;
+  height: var(--nav-height); /* 这里能访问到 app 中定义的变量 */
+  padding: 7px 0;
+  box-sizing: border-box;
   align-items: center;
 }
 #logo {
