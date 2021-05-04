@@ -3,9 +3,9 @@
     <Nav />
     <div id="content">
       <div id="listContainer">
-        <GraphList />
+        <GraphList v-bind:domain="domain" v-on:changeDomain="changeDomain"/>
       </div>
-      <GraphContainer />
+      <GraphContainer v-bind:domain="domain" ref="graphContainer"/>
     </div>
   </div>
 </template>
@@ -20,6 +20,18 @@ export default {
     GraphContainer,
     Nav,
     GraphList
+  },
+  data () {
+    return {
+      domain: null // 当前显示哪个图谱
+    }
+  },
+  methods: {
+    // 当 graphList 更改 domain 时，graphContainer 相应更改
+    changeDomain (name) {
+      this.domain = name
+      this.$refs.graphContainer.changeDomain(name)
+    }
   }
 }
 </script>
@@ -43,5 +55,11 @@ export default {
   height: var(--content-height);
   display: grid;
   grid-template-columns: 1fr 4fr;
+}
+#listContainer {
+  border-right: 2px solid #1179b3;
+  min-width: 250px;
+  height: 100%;
+  color: lightskyblue;
 }
 </style>
