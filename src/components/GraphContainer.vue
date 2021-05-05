@@ -1,20 +1,31 @@
 <template>
-  <div class="graphContainer" id="graphContainer"></div>
+  <div class="graphContainer" id="graphContainer">
+    <GraphInfo v-bind:graph='graph' :mode_name='mode_name' :analyzedProperties='analyzedProperties'/>
+    <OperationList v-show="mode_name === '力导图模式'"/>
+  </div>
 </template>
 
 <script>
 import $ from 'jquery'
 import _ from 'underscore'
 import * as d3 from 'd3'
+import GraphInfo from './GraphInfo.vue'
+import OperationList from './OperationList.vue'
 export default {
   name: 'GraphContainer',
   props: ['domain'],
+  components: {
+    GraphInfo,
+    OperationList,
+  },
   data () {
     return {
       graph: {
         nodes: [],
         links: [],
       },
+      mode_name: '力导图模式',
+      analyzedProperties: {},
       graphMode: true,
     }
   },
@@ -508,7 +519,7 @@ export default {
       $.ajax({
         data: ajaxData,
         type: 'POST',
-        url: 'update_coordinate_of_node',
+        url: 'http://localhost:8081/update_coordinate_of_node',
         success: function (result) {
           if (result.code === 200) {
           }
@@ -806,4 +817,14 @@ export default {
 </script>
 
 <style>
+#graphContainer {
+  width: 100%;
+  height: 100%;
+}
+.circle_operate {
+  display: none;
+}
+circle {
+  cursor: pointer;
+}
 </style>

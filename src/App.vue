@@ -5,7 +5,9 @@
       <div id="listContainer">
         <GraphList v-bind:domain="domain" v-on:changeDomain="changeDomain"/>
       </div>
-      <GraphContainer v-bind:domain="domain" ref="graphContainer"/>
+      <GraphContainer v-bind:domain="domain" ref="graphContainer">
+        <div>hello</div>
+      </GraphContainer>
     </div>
   </div>
 </template>
@@ -54,6 +56,7 @@ export default {
 #content {
   height: var(--content-height);
   display: grid;
+  background-color: #333333;
   grid-template-columns: 1fr 4fr;
 }
 #listContainer {
