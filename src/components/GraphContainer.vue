@@ -66,6 +66,7 @@ export default {
             if (result.data !== null) {
               _this.graph.nodes = result.data.node
               _this.graph.links = result.data.relationship
+              _this.$emit('setGraph', _this.graph.nodes, _this.graph.links)
               _this.updateGraph(_this.graphMode)
             }
           }

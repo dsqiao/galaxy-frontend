@@ -10,11 +10,14 @@
           :hint="m.hint"
           @click.native="m.click"
         />
-        <Drawer :visible.sync="listDrawer" title="图谱列表">
+        <Drawer :visible.sync="listDrawer" title="图谱列表" width="max(18%, 200px)">
           <GraphList v-bind:domain="domain" v-on:changeDomain="changeDomain" />
         </Drawer>
+        <Drawer :visible.sync="tableDrawer" title="属性表" width="500px">
+          <AttributionTable :graph="this.graph"></AttributionTable>
+        </Drawer>
       </div>
-      <GraphContainer v-bind:domain="domain" ref="graphContainer">
+      <GraphContainer v-on:setGraph="this.setGraph" v-bind:domain="domain" ref="graphContainer">
       </GraphContainer>
     </div>
   </div>
@@ -26,6 +29,7 @@ import Nav from './components/Nav.vue'
 import GraphList from './components/GraphList.vue'
 import Drawer from './components/Drawer.vue'
 import OpSvg from './components/OpSvg'
+import AttributionTable from './components/AttributionTable'
 export default {
   name: 'App',
   components: {
@@ -34,13 +38,19 @@ export default {
     GraphList,
     Drawer,
     OpSvg,
+    AttributionTable,
   },
   data () {
     const _this = this
     return {
       domain: null, // 当前显示哪个图谱
-      listDrawer: false,
+      listDrawer: false, // 图谱列表抽屉是否打开
+      tableDrawer: false, // 图谱表格抽屉是否打开
       drawer: false,
+      graph: {
+        nodes: [],
+        links: [],
+      },
       operationList: [{
         path: require('./assets/svg/list.svg'),
         hint: '图谱列表',
@@ -48,7 +58,7 @@ export default {
       }, {
         path: require('./assets/svg/table.svg'),
         hint: 'table',
-        click: () => { }
+        click: () => { _this.tableDrawer = !_this.tableDrawer }
       }, {
         path: require('./assets/svg/new.svg'),
         hint: 'new',
@@ -66,8 +76,10 @@ export default {
       this.domain = name
       this.$refs.graphContainer.changeDomain(name)
     },
-    showList () {
-      this.listDrawer = !this.listDrawer
+    // graphContainer 更改了 graph 时，table 也需要相应更改
+    setGraph (nodes, links) { // 没调用
+      this.graph.nodes = nodes
+      this.graph.links = links
     }
   }
 }

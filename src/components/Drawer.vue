@@ -2,7 +2,7 @@
   <transition name="drawer-fade">
     <div class="drawer__wrapper" v-show="visible">
       <div class="drawer__container" :class="visible && 'drawer__open'">
-        <div class="drawer">
+        <div class="drawer" :style="{width: this.width}">
           <header class="drawer__header">
             <div class="icon" @click="closeDrawer">
               <img src="../assets/svg/return.svg"/>
@@ -28,6 +28,9 @@ export default {
     title: {
       type: String,
       default: '标题',
+    },
+    width: {
+      type: String,
     }
   },
   computed: {},
@@ -38,7 +41,7 @@ export default {
   methods: {
     closeDrawer () {
       this.$emit('update:visible', false)
-    }
+    },
   },
   mounted: {},
   destroyed: {},
@@ -67,7 +70,6 @@ export default {
 .drawer {
   position: absolute;
   overflow: hidden;
-  width: max(18%, 280px);
   height: 100%;
   left: 0;
   top: 0;
@@ -98,27 +100,40 @@ export default {
   margin-left: 20px;
   color: white;
 }
+.drawer-fade-enter-active {
+  animation: drawer-fade-in .4s ease;
+}
+.drawer-fade-leave-active {
+  animation: drawer-fade-in .4s ease reverse;
+}
+@keyframes drawer-fade-in {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
 .drawer__open .drawer {
-  animation: drawer-in 0.3s 0ms;
+  animation: drawer-in .4s;
+}
+.drawer {
+  animation: drawer-out .4s;
 }
 @keyframes drawer-in {
   0% {
     transform: translate(-100%, 0);
-    opacity: 0;
   }
   100% {
     transform: translate(0, 0);
-    opacity: 1;
   }
 }
-.drawer-fade-leave-to {
-  transform: translate(min(-18%, -280px), 0);
-  opacity: 0;
-}
-.drawer-fade-leave-active {
-  transition-property: all;
-  transition-timing-function: ease;
-  transition-delay: 0ms;
-  transition-duration: 0.3s;
+@keyframes drawer-out {
+  0% {
+    transform: translate(0, 0);
+  }
+  100% {
+    transform: translate(-100%, 0);
+  }
 }
 </style>
