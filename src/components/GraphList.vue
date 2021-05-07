@@ -83,6 +83,7 @@ export default {
 
 .name {
   font-size: 18px;
+  color: white;
   border-bottom: 2px solid #fee064;
 }
 #listContent {

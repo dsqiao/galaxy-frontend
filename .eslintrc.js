@@ -15,6 +15,6 @@ module.exports = {
     'no-debugger': process.env.NODE_ENV === 'production' ? 'warn' : 'off',
     'comma-dangle': "off", // 不管结尾加不加逗号了
     'prefer-const': 'off',
-
+    'vue/no-unused-components': 'off'
   }
 }
