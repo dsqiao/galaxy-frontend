@@ -3,10 +3,15 @@
     <Nav />
     <div id="content">
       <div class="toolbar">
-        <img src="./assets/svg/table.svg" @click="drawer = true" />
-        <img src="./assets/svg/refresh.svg" @click="listDrawer = true" />
-        <Drawer :visible.sync="listDrawer">
-          <GraphList v-bind:domain="domain" v-on:changeDomain="changeDomain"/>
+        <OpSvg
+          v-for="m in this.operationList"
+          v-bind:key="m.hint"
+          :src="m.path"
+          :hint="m.hint"
+          @click.native="m.click"
+        />
+        <Drawer :visible.sync="listDrawer" title="图谱列表">
+          <GraphList v-bind:domain="domain" v-on:changeDomain="changeDomain" />
         </Drawer>
       </div>
       <GraphContainer v-bind:domain="domain" ref="graphContainer">
@@ -20,19 +25,39 @@ import GraphContainer from './components/GraphContainer.vue'
 import Nav from './components/Nav.vue'
 import GraphList from './components/GraphList.vue'
 import Drawer from './components/Drawer.vue'
+import OpSvg from './components/OpSvg'
 export default {
   name: 'App',
   components: {
     GraphContainer,
     Nav,
     GraphList,
-    Drawer
+    Drawer,
+    OpSvg,
   },
   data () {
+    const _this = this
     return {
       domain: null, // 当前显示哪个图谱
       listDrawer: false,
-      drawer: false
+      drawer: false,
+      operationList: [{
+        path: require('./assets/svg/list.svg'),
+        hint: '图谱列表',
+        click: () => { _this.listDrawer = !_this.listDrawer }
+      }, {
+        path: require('./assets/svg/table.svg'),
+        hint: 'table',
+        click: () => { }
+      }, {
+        path: require('./assets/svg/new.svg'),
+        hint: 'new',
+        click: () => { }
+      }, {
+        path: require('./assets/svg/refresh.svg'),
+        hint: 'refresh',
+        click: () => { }
+      }]
     }
   },
   methods: {
@@ -40,12 +65,16 @@ export default {
     changeDomain (name) {
       this.domain = name
       this.$refs.graphContainer.changeDomain(name)
+    },
+    showList () {
+      this.listDrawer = !this.listDrawer
     }
   }
 }
 </script>
 
 <style>
+@import url(./globalColor.css);
 * {
   --app-height: 100vh;
   --nav-height: 65px;
@@ -77,8 +106,9 @@ export default {
   width: var(--toolbar-width);
   background-color: #202124;
   display: flex;
-  padding: 12px 8px;
-  box-sizing: border-box;
   flex-direction: column;
+  align-items: center;
+  padding: 24px 18px;
+  box-sizing: border-box;
 }
 </style>

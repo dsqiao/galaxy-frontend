@@ -5,8 +5,9 @@
         <div class="drawer">
           <header class="drawer__header">
             <div class="icon" @click="closeDrawer">
-              <img src="../assets/svg/return.svg" />
+              <img src="../assets/svg/return.svg"/>
             </div>
+            <div class="title">{{this.title}}</div>
           </header>
           <section class="drawer__body">
             <slot></slot>
@@ -23,6 +24,10 @@ export default {
   props: {
     visible: {
       type: Boolean
+    },
+    title: {
+      type: String,
+      default: '标题',
     }
   },
   computed: {},
@@ -69,27 +74,44 @@ export default {
   bottom: 0;
   background-color: #202124;
 }
-.icon {
-  width: 32px;
-  height: 32px;
-  border-radius: 16px;
-  border: 1px solid #0011ff;
+.drawer__header {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  padding: 24px 30px;
 }
-/* in 的时候，display 先被设置为 block，然后运行 animation，没问题 */
-/* out 的时候，display 先被设置为 none，然后运行 animation，所以 animtaion 就看不到了 */
+.icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 19px;
+  cursor: pointer;
+  transition: 0.3s; /* unhover 时用 */
+}
+.icon:hover {
+  background-color: #3c4043;
+  transition: .3s;
+}
+.title {
+  margin-left: 20px;
+  color: white;
+}
 .drawer__open .drawer {
   animation: drawer-in 0.3s 0ms;
 }
-/* .drawer {
-  animation: drawer-out 1s 100ms;
-} */
 @keyframes drawer-in {
   0% {
     transform: translate(-100%, 0);
+    opacity: 0;
+  }
+  100% {
+    transform: translate(0, 0);
+    opacity: 1;
   }
 }
 .drawer-fade-leave-to {
-  /* 这里不应该用 100%，因为 transition 的宽度有整个元素那么宽了。应该用 drawer 的宽度 */
   transform: translate(min(-18%, -280px), 0);
   opacity: 0;
 }
@@ -97,7 +119,6 @@ export default {
   transition-property: all;
   transition-timing-function: ease;
   transition-delay: 0ms;
-  transition-duration: 0.3s; /* 这里不能用 .3s，必须把0写上 */
+  transition-duration: 0.3s;
 }
-
 </style>

@@ -1,7 +1,7 @@
 <template>
   <div class="graphContainer" id="graphContainer">
     <GraphInfo v-bind:graph='graph' :mode_name='mode_name' :analyzedProperties='analyzedProperties'/>
-    <OperationList v-show="mode_name === '力导图模式'"/>
+    <!-- <OperationList v-show="mode_name === '力导图模式'"/> -->
   </div>
 </template>
 
