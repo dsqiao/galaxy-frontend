@@ -2,12 +2,12 @@
   <transition name="drawer-fade">
     <div class="drawer__wrapper" v-show="visible">
       <div class="drawer__container" :class="visible && 'drawer__open'">
-        <div class="drawer" :style="{width: this.width}">
+        <div class="drawer" :style="{ width: this.width }">
           <header class="drawer__header">
             <div class="icon" @click="closeDrawer">
-              <img src="../assets/svg/return.svg"/>
+              <img src="../assets/svg/return.svg" />
             </div>
-            <div class="title">{{this.title}}</div>
+            <div class="title">{{ this.title }}</div>
           </header>
           <section class="drawer__body">
             <slot></slot>
@@ -94,17 +94,17 @@ export default {
 }
 .icon:hover {
   background-color: #3c4043;
-  transition: .3s;
+  transition: 0.3s;
 }
 .title {
   margin-left: 20px;
   color: white;
 }
 .drawer-fade-enter-active {
-  animation: drawer-fade-in .4s ease;
+  animation: drawer-fade-in 0.4s ease;
 }
 .drawer-fade-leave-active {
-  animation: drawer-fade-in .4s ease reverse;
+  animation: drawer-fade-in 0.4s ease reverse;
 }
 @keyframes drawer-fade-in {
   0% {
@@ -115,10 +115,10 @@ export default {
   }
 }
 .drawer__open .drawer {
-  animation: drawer-in .4s;
+  animation: drawer-in 0.4s;
 }
 .drawer {
-  animation: drawer-out .4s;
+  animation: drawer-out 0.4s;
 }
 @keyframes drawer-in {
   0% {

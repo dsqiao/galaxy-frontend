@@ -13,7 +13,7 @@
         <Drawer :visible.sync="listDrawer" title="图谱列表" width="max(18%, 200px)">
           <GraphList v-bind:domain="domain" v-on:changeDomain="changeDomain" />
         </Drawer>
-        <Drawer :visible.sync="tableDrawer" title="属性表" width="500px">
+        <Drawer :visible.sync="tableDrawer" title="属性表" width="400px">
           <AttributionTable :graph="this.graph"></AttributionTable>
         </Drawer>
       </div>

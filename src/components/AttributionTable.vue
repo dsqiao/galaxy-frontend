@@ -54,14 +54,11 @@ export default {
 
 <style>
 #tableContainer {
-  position: absolute;
-  top: 23%;
-  width: 300px;
-  height: 400px;
   background-color: rgba(166, 166, 166, 0.6);
   color: white;
   text-align: center;
   padding: 5px 10px;
+  margin: 20px 40px;
   border-radius: 15px;
 }
 #closeAttributeTable {
