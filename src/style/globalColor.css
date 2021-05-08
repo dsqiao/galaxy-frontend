@@ -1,0 +1,17 @@
+* {
+  --gray-200: #e8eaed;
+  --gray-300: #dadce0;
+  --gray-400: #bdc1c6;
+  --gray-700: #5f6368;
+  --gray-800: #3c4043;
+  --gray-900: #202124;
+  --blue-500: #4285f4;
+  --red-300: #f28b82;
+  --red-900: #a50e0e;
+  --icon-active: var(--blue-500);
+  --tool-bar-svg-background: var(--gray-800);
+  --graph-list-svg-background: var(--gray-700);
+  --drawer-background: var(--gray-900);
+  --drawer-background-hover: var(--gray-800);
+  --active-graph-list-item: var(--gray-800);
+}

@@ -1,7 +1,11 @@
 <template>
   <transition name="drawer-fade">
     <div class="drawer__wrapper" v-show="visible">
-      <div class="drawer__container" :class="visible && 'drawer__open'">
+      <div
+        class="drawer__container"
+        :class="visible && 'drawer__open'"
+        @click.self="handleWrapperClick"
+      >
         <div class="drawer" :style="{ width: this.width }">
           <header class="drawer__header">
             <div class="icon" @click="closeDrawer">
@@ -37,11 +41,29 @@ export default {
   data () {
     return {}
   },
-  watch: {},
+  watch: {
+    visible (val) {
+      if (val) {
+        const mask = document.createElement('div')
+        mask.id = 'mask'
+        mask.className = 'mask-in'
+        document.body.append(mask)
+      } else {
+        document.getElementById('mask').className = 'mask-out'
+        console.log(document.getElementById('mask'))
+        setTimeout(() => {
+          document.body.removeChild(document.getElementById('mask'))
+        }, 400) // 等动画做完再删 mask
+      }
+    }
+  },
   methods: {
     closeDrawer () {
       this.$emit('update:visible', false)
     },
+    handleWrapperClick () {
+      this.closeDrawer()
+    }
   },
   mounted: {},
   destroyed: {},
@@ -55,7 +77,7 @@ export default {
   bottom: 0;
   left: 0;
   right: 0;
-  z-index: 2021;
+  z-index: 2021; /* 在 mask 上面 */
   overflow: hidden;
 }
 .drawer__container {
@@ -74,7 +96,7 @@ export default {
   left: 0;
   top: 0;
   bottom: 0;
-  background-color: #202124;
+  background-color: var(--drawer-background);
 }
 .drawer__header {
   display: flex;
@@ -135,5 +157,37 @@ export default {
   100% {
     transform: translate(-100%, 0);
   }
+}
+#mask {
+  position: fixed;
+  top: var(--nav-height);
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 2000;
+  background-color: black;
+  opacity: 0.5;
+}
+@keyframes mask-fade-in {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 0.5;
+  }
+}
+@keyframes mask-fade-out {
+  0% {
+    opacity: 0.5;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+.mask-in {
+  animation: mask-fade-in 0.4s ease;
+}
+.mask-out {
+  animation: mask-fade-out 0.4s ease;
 }
 </style>

@@ -1,6 +1,11 @@
 <template>
-  <div class="svg" @mouseenter="this.hover" @mouseleave="this.unhover">
-    <img :src="this.src" />
+  <div
+    class="svg"
+    @mouseenter="this.hover"
+    @mouseleave="this.unhover"
+    :style="active && 'background: var(--tool-bar-svg-background);'"
+  >
+    <img :src="active ? this.activeSrc : this.src" />
     <transition name="hint-fade">
       <div class="hint" v-show="isHovered">{{ this.hint }}</div>
     </transition>
@@ -16,6 +21,14 @@ export default {
       default: 'hint',
     },
     src: {
+      type: String,
+      default: '',
+    },
+    active: {
+      type: Boolean,
+      default: false,
+    },
+    activeSrc: {
       type: String,
       default: '',
     }
@@ -47,9 +60,10 @@ export default {
   justify-content: center;
   cursor: pointer;
   margin: 15px 0;
+  box-sizing: border-box;
 }
 .svg:hover {
-  background-color: #3c4043;
+  background-color: var(--tool-bar-svg-background);
   transition: 0.3s;
 }
 .hint {
@@ -66,14 +80,14 @@ export default {
   opacity: 0;
 }
 .hint-fade-enter-active {
-  transition-delay: .3s;
-  transition-duration: .6s;
+  transition-delay: 0.3s;
+  transition-duration: 0.6s;
 }
 .hint-fade-leave-to {
   opacity: 0;
 }
 .hint-fade-leave-active {
   transition-delay: 0;
-  transition-duration: .6s;
+  transition-duration: 0.6s;
 }
 </style>

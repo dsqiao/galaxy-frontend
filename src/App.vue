@@ -7,17 +7,36 @@
           v-for="m in this.operationList"
           v-bind:key="m.hint"
           :src="m.path"
+          :activeSrc="m.activePath"
           :hint="m.hint"
+          :active="m.isActive"
           @click.native="m.click"
         />
-        <Drawer :visible.sync="listDrawer" title="图谱列表" width="max(18%, 200px)">
-          <GraphList v-bind:domain="domain" v-on:changeDomain="changeDomain" />
+        <Drawer
+          :visible.sync="listDrawer"
+          title="图谱列表"
+          width="max(20%, 240px)"
+        >
+          <GraphList
+            v-bind:domain="domain"
+            v-on:changeDomain="changeDomain"
+            @clickNew="createDomainDrawer = true"
+          />
         </Drawer>
+        <Drawer
+          :visible.sync="createDomainDrawer"
+          title="新建图谱"
+          width="300px"
+        />
         <Drawer :visible.sync="tableDrawer" title="属性表" width="400px">
           <AttributionTable :graph="this.graph"></AttributionTable>
         </Drawer>
       </div>
-      <GraphContainer v-on:setGraph="this.setGraph" v-bind:domain="domain" ref="graphContainer">
+      <GraphContainer
+        v-on:setGraph="this.setGraph"
+        v-bind:domain="domain"
+        ref="graphContainer"
+      >
       </GraphContainer>
     </div>
   </div>
@@ -46,7 +65,8 @@ export default {
       domain: null, // 当前显示哪个图谱
       listDrawer: false, // 图谱列表抽屉是否打开
       tableDrawer: false, // 图谱表格抽屉是否打开
-      drawer: false,
+      createDomainDrawer: false,
+      createNodeMode: false,
       graph: {
         nodes: [],
         links: [],
@@ -67,6 +87,18 @@ export default {
         path: require('./assets/svg/refresh.svg'),
         hint: 'refresh',
         click: () => { }
+      }, {
+        path: require('./assets/svg/circle.svg'),
+        activePath: require('./assets/svg/activeCircle.svg'),
+        hint: '新建结点',
+        click: _this.clickCreateNodeSvg,
+        isActive: false,
+      }, {
+        path: require('./assets/svg/link.svg'),
+        activePath: require('./assets/svg/activeLink.svg'),
+        hint: '新建关系',
+        click: _this.clickCreateLinkSvg,
+        isActive: false
       }]
     }
   },
@@ -80,13 +112,23 @@ export default {
     setGraph (nodes, links) { // 没调用
       this.graph.nodes = nodes
       this.graph.links = links
+    },
+    clickCreateNodeSvg () {
+      // 点一下激活，点两下取消
+      this.createNodeMode = !this.createNodeMode
+      // 激活 svg
+      this.operationList[4].isActive = this.createNodeMode
+    },
+    clickCreateLinkSvg () {
+      this.createLinkMode = !this.createLinkMode
+      this.operationList[5].isActive = this.createLinkMode
     }
   }
 }
 </script>
 
 <style>
-@import url(./globalColor.css);
+@import url('./style/globalColor.css');
 * {
   --app-height: 100vh;
   --nav-height: 65px;
