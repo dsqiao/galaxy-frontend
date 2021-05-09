@@ -1,0 +1,22 @@
+/* @keyframes button-group-fade-in {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+@keyframes button-group-fade-out {
+  0% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+.buttonGroup {
+  animation: button-group-fade-in 0.3s ease ;
+}
+.circle_operate {
+  animation: button-group-fade-out 0.3s ease;
+} */

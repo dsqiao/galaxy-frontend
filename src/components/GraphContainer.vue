@@ -1,5 +1,9 @@
 <template>
-  <div class="graphContainer" id="graphContainer">
+  <div
+    class="graphContainer"
+    id="graphContainer"
+    :style="this.$store.state.createNodeMode && 'cursor: crosshair;'"
+  >
     <GraphInfo
       v-bind:graph="graph"
       :mode_name="mode_name"
@@ -20,10 +24,6 @@ export default {
   props: {
     domain: {
       type: String,
-    },
-    createNodeMode: {
-      type: Boolean,
-      default: false,
     },
     createLinkMode: {
       type: Boolean,
@@ -71,29 +71,48 @@ export default {
     this.nodeGroup = this.svg.append('g').attr('class', 'node')
     this.nodeTextGroup = this.svg.append('g').attr('class', 'nodeText')
     this.nodeButtonGroup = this.svg.append('g').attr('class', 'nodeButton')
-    this.svg.on('click', () => {
-      d3.selectAll('.buttonGroup').classed('circle_operate', true)
+    this.svg.on('click', (event) => {
+      if (event.srcElement.tagName !== 'circle') {
+        // 点的不是 node ，隐藏所有 btnGroup
+        d3.selectAll('.buttonGroup').classed('circle_operate', true)
+          .transition()
+          .style('opacity', 0)
+          .on('end', function () {
+            d3.select(this).style('display', 'none')
+          })
+      }
     }, 'false')
+    document.getElementById('graphContainer').addEventListener('click', (event) => {
+      if (this.$store.state.createNodeMode) {
+        this.setCreateNodeMode(false)
+        this.txx = event.offsetX
+        this.tyy = event.offsetY
+        this.createSingleNode()
+      }
+    })
   },
   methods: {
     ...mapMutations([
       'switchIsEditingNodeAttr',
       'switchIsEditingLinkAttr',
       'setNodeAttr',
+      'setCreateNodeMode',
     ]),
     changeDomain (name) {
       const _this = this
       $.ajax({
+        // pageSize 记录最多返回结点个数
         data: {
           domain: name,
           nodeName: '',
-          pageSize: 5,
+          pageSize: 500,
         },
         type: 'POST',
         url: 'http://localhost:8081/get_domain_graph',
         success: function (result) {
           if (result.code === 200) {
             if (result.data !== null) {
+              console.log(result.data)
               _this.graph.nodes = result.data.node
               _this.graph.links = result.data.relationship
               _this.$emit('setGraph', _this.graph.nodes, _this.graph.links)
@@ -108,69 +127,71 @@ export default {
       const lks = this.graph.links
       let nodes = this.graph.nodes
       const links = []
-      const filterList = []
-      nodes.forEach(function (n) {
-        if (filterList.indexOf(n.type) === -1) filterList.push(n.type)
-      })
-      _this.filterList = filterList
-      const temp = _this.selectedFilterList
-      if (typeof temp === 'undefined' || temp.length === 0) {
-        _this.selectedFilterList = _this.deepClone(_this.filterList)
-      }
-      const sortNodes = _this.deepClone(nodes)
-      const classifiedNodes = {}
-      if (typeof _this.customSortOrderList === 'undefined' ||
-        _this.customSortOrderList.length < _this.filterList.length) {
-        sortNodes.forEach(function (n) {
-          if (typeof classifiedNodes[n.type] === 'undefined') {
-            classifiedNodes[n.type] = [n]
-          } else {
-            classifiedNodes[n.type].push(n)
-          }
+
+      if (!mode) {
+        const filterList = [] // 存所有种类
+        nodes.forEach(function (n) {
+          if (filterList.indexOf(n.type) === -1) filterList.push(n.type)
         })
-      } else {
-        for (const type of _this.customSortOrderList) {
+        _this.filterList = filterList
+        const temp = _this.selectedFilterList
+        if (typeof temp === 'undefined' || temp.length === 0) {
+          _this.selectedFilterList = _this.deepClone(_this.filterList)
+        }
+        const sortNodes = _this.deepClone(nodes)
+        const classifiedNodes = {}
+        if (typeof _this.customSortOrderList === 'undefined' ||
+          _this.customSortOrderList.length < _this.filterList.length) {
           sortNodes.forEach(function (n) {
-            if (n.type === type) {
-              if (typeof classifiedNodes[n.type] === 'undefined') {
-                classifiedNodes[n.type] = [n]
-              } else {
-                classifiedNodes[n.type].push(n)
-              }
+            if (typeof classifiedNodes[n.type] === 'undefined') {
+              classifiedNodes[n.type] = [n]
+            } else {
+              classifiedNodes[n.type].push(n)
             }
           })
+        } else {
+          for (const type of _this.customSortOrderList) {
+            sortNodes.forEach(function (n) {
+              if (n.type === type) {
+                if (typeof classifiedNodes[n.type] === 'undefined') {
+                  classifiedNodes[n.type] = [n]
+                } else {
+                  classifiedNodes[n.type].push(n)
+                }
+              }
+            })
+          }
+          _this.filterList = _this.deepClone(_this.customSortOrderList)
         }
-        _this.filterList = _this.deepClone(_this.customSortOrderList)
-      }
-      const cateNum = Object.keys(classifiedNodes).length
-      const rightContainer = document.getElementById('graphContainer')
-      const leftMargin = 150
-      let topMargin = 120
-      const xSplit = rightContainer.offsetWidth / cateNum - 50
-      const ySplit = 20
-      let cnt = 0
-      const res = []
-      const analyzedProperties = []
-      for (const c in classifiedNodes) {
-        analyzedProperties.push({
-          type: c,
-          nodes_names: ''
-        })
-        topMargin += cnt * ySplit
-        classifiedNodes[c].forEach(function (n) {
-          n.x = n.fx = leftMargin + cnt * xSplit
-          n.y = n.fy = topMargin + classifiedNodes[c].indexOf(n) * (100 - 0.6 * ySplit)
-          res.push(n)
-          analyzedProperties[_this.filterList.indexOf(c)].nodes_names += (n.name + ' ')
-        })
-        cnt += 1
-      }
-      _this.analyzedProperties = analyzedProperties
-      if (!mode) {
+        const cateNum = Object.keys(classifiedNodes).length
+        const rightContainer = document.getElementById('graphContainer')
+        const leftMargin = 150
+        let topMargin = 120
+        const xSplit = rightContainer.offsetWidth / cateNum - 50
+        const ySplit = 20
+        let cnt = 0
+        const res = []
+        const analyzedProperties = []
+        for (const c in classifiedNodes) {
+          analyzedProperties.push({
+            type: c,
+            nodes_names: ''
+          })
+          topMargin += cnt * ySplit
+          classifiedNodes[c].forEach(function (n) {
+            n.x = n.fx = leftMargin + cnt * xSplit
+            n.y = n.fy = topMargin + classifiedNodes[c].indexOf(n) * (100 - 0.6 * ySplit)
+            res.push(n)
+            analyzedProperties[_this.filterList.indexOf(c)].nodes_names += (n.name + ' ')
+          })
+          cnt += 1
+        }
+        _this.analyzedProperties = analyzedProperties
+
         nodes = res
       }
       _this.updateNodeAndLink(nodes, lks, links)
-      // 为每一个结点定制按钮组
+      // 为每一个结点定制按钮组，nodeButton 就是每个点四周那一圈
       _this.addNodeButton()
       _this.updateLinkAttr(links)
 
@@ -250,6 +271,7 @@ export default {
     },
     updateNodeAndLink (nodes, lks, links) {
       // 由后端传过来的节点坐标，固定节点，由于是字符串，需要转换
+      // 刚create 的结点是有 fx 的，所以这个应该不会动到它
       nodes.forEach(function (n) {
         if (typeof (n.fx) === 'undefined' || n.fx === '' || n.fx == null) {
           n.fx = null
@@ -280,10 +302,10 @@ export default {
       let pie = d3.pie()
       let pieData = pie(database)
       let nodeButton = this.svg.append('defs')
-      nodes.forEach(function (m) {
+      nodes.forEach(function (node) {
         let nodeBtnGroup = nodeButton.append('g')
-          .attr('id', 'out_circle' + m.uuid) // 为每一个节点定制一个按钮组，在画按钮组的时候为其指定该id
-        let buttonEnter = nodeBtnGroup.selectAll('.buttonGroup')
+          .attr('id', 'out_circle' + node.uuid) // 为每一个节点定制一个按钮组，在画按钮组的时候为其指定该id
+        let buttonEnter = nodeBtnGroup.selectAll('.buttonGroup') // nodeBtnGroup 刚创建
           .data(pieData)
           .enter()
           .append('g')
@@ -291,20 +313,22 @@ export default {
             return 'action_' + i
           })
         let defaultR = 30
-        if (typeof (m.r) === 'undefined') {
-          m.r = defaultR
+        if (typeof (node.r) === 'undefined') {
+          node.r = defaultR
         }
+        // 设置内径 和 外径
         let arc = d3.arc()
-          .innerRadius(m.r)
-          .outerRadius(m.r + 30)
+          .innerRadius(node.r)
+          .outerRadius(node.r + node.r)
         buttonEnter.append('path')
-          .attr('d', function (d) {
+          .attr('d', function (d) { // d 描述路径
+            console.log(d)
             return arc(d)
           })
-          .attr('fill', '#D2D5DA')
-          .style('opacity', 0.6)
-          .attr('stroke', '#f0f0f4')
-          .attr('stroke-width', 2)
+          .attr('fill', '#D2D5DA') // 描述扇区颜色
+          .style('opacity', 0.6) // 扇区以及边界的透明度
+          .attr('stroke', '#fff') // 边界颜色
+          .attr('stroke-width', 1) // 边界宽度
         buttonEnter.append('text')
           .attr('transform', function (d, i) {
             return 'translate(' + arc.centroid(d) + ')'
@@ -370,6 +394,8 @@ export default {
         .attr('class', function (d, i) {
           return 'buttonGroup out_buttonGroup_' + d.uuid
         })
+        .style('opacity', 0)
+        .style('display', 'none')
         .classed('circle_operate', true)
     },
     drawNode (node) {
@@ -468,26 +494,6 @@ export default {
           return 1
         })
 
-      // nodeEnter.append('title')// 为每个节点设置title
-      //     .text(function (d) {
-      //         return d.name
-      //     })
-      nodeEnter.on('mouseover', function (d, i) {
-        _this.nodeDetail = d
-        _this.timer = setTimeout(function () {
-          d3.select('#richContainer')
-            .style('position', 'absolute')
-            .style('left', d.x + 'px')
-            .style('top', d.y + 'px')
-            .style('display', 'block')
-          _this.editorContent = ''
-          _this.showImageList = []
-          // _this.getNodeDetail(d.uuid)
-        }, 2000)
-      })
-      nodeEnter.on('mouseout', function (d, i) {
-        clearTimeout(_this.timer)
-      })
       // 双击编辑结点属性
       nodeEnter.on('dblclick', function (event, d) { // d3 api 改了，多传了个 event 作为第一个参数
         _this.updateNodeProperty(d)
@@ -495,20 +501,41 @@ export default {
       nodeEnter.on('mouseenter', function (d) {
         let aa = d3.select(this)._groups[0][0]
         if (aa.classList.contains('selected')) return
-        d3.select(this).style('stroke-width', '6')
+        d3.select(this)
+          .transition()
+          .style('stroke-width', '7')
       })
       nodeEnter.on('mouseleave', function (d) {
         let aa = d3.select(this)._groups[0][0]
         if (aa.classList.contains('selected')) return
-        d3.select(this).style('stroke-width', '2')
+        d3.select(this)
+          .transition()
+          .style('stroke-width', '2')
       })
       nodeEnter.on('click', function (event, d) {
-        d3.select('#nodeDetail').style('display', 'block')
-        // 其他结点的外圈全部隐藏
+        const thisCircle = _this.svg.select('.out_buttonGroup_' + d.uuid) // 此次点击的 node 元素
+        // 若 btnGroup 已经打开，则关闭它
+        if (!thisCircle._groups[0][0].classList.contains('circle_operate')) {
+          thisCircle.classed('circle_operate', true)
+            .transition()
+            .style('opacity', 0)
+            .on('end', function () {
+              d3.select(this).style('display', 'none')
+            })
+          return
+        }
+        // 所有结点的外圈全部隐藏
         _this.svg.selectAll('.buttonGroup').classed('circle_operate', true)
+          .transition()
+          .style('opacity', 0)
+          .on('end', function () {
+            d3.select(this).style('display', 'none')
+          })
         // 被点击结点的外圈打开
-        // 关系 index = d.index
-        _this.svg.selectAll('.out_buttonGroup_' + d.uuid).classed('circle_operate', false)
+        thisCircle.classed('circle_operate', false)
+          .style('display', 'block')
+          .transition()
+          .style('opacity', 1)
         _this.graphEntity = d
         _this.selectNodeId = d.uuid
         _this.selectnodename = d.name
@@ -572,6 +599,7 @@ export default {
         .attr('dy', 4)
         .attr('font-family', '微软雅黑')
         .attr('text-anchor', 'middle')
+        .attr('pointer-events', 'none') // 让文字不能被光标选中
         .text(function (d) {
           // 这段代码不会影响结点名称的渲染，故注释掉
           // if (typeof (d.name) === 'undefined') return '';
@@ -593,7 +621,6 @@ export default {
             .style('display', 'block')
           _this.editorContent = ''
           _this.showImageList = []
-          // _this.getNodeDetail(d.uuid);
         }, 3000)
       })
       nodeTextEnter.on('click', function (event, d) {
@@ -668,8 +695,6 @@ export default {
       })
       linkEnter.on('mouseenter', function (d) {
         // d3.select(this).style('stroke-width', '6').style('cursor', 'pointer').attr('stroke', '#ff9e9e').attr('marker-end', 'url(#arrow)');
-        // _this.nodeDetail = d.lk;
-        // d3.select('#nodeDetail').style('display', 'block');
         d3.select(this).style('cursor', 'pointer')
       })
       linkEnter.on('mouseleave', function (d) {
@@ -786,7 +811,6 @@ export default {
       let _this = this
       _this.svg.call(d3.zoom().on('zoom', function (event) {
         d3.select('#link_menubar').style('display', 'none')
-        d3.select('#nodeDetail').style('display', 'none')
         d3.selectAll('.node').attr('transform', event.transform)
         d3.selectAll('.nodeText').attr('transform', event.transform)
         d3.selectAll('.link').attr('transform', event.transform)
@@ -844,6 +868,33 @@ export default {
         _this.nodeButtonAction = 'DELETE'
       })
     },
+    createSingleNode () {
+      if (this.domain === null || this.domain === '') {
+        alert('请先选择图谱')
+        return
+      }
+      let _this = this
+      let data = { name: '', r: 30, domain: _this.domain }
+      $.ajax({
+        data: data,
+        type: 'POST',
+        traditional: true,
+        url: 'http://localhost:8081/create_node',
+        success: function (result) {
+          if (result.code === 200) {
+            let newNode = result.data
+            // 结点的坐标信息怎么来的？
+            // newNode 格式：{"r":30,"color":"#483d8b","name":"","uuid":"83", "type": "未分类"}
+            newNode.x = _this.txx
+            newNode.y = _this.tyy
+            newNode.fx = _this.txx
+            newNode.fy = _this.tyy
+            _this.graph.nodes.push(newNode)
+            _this.updateGraph(true)
+          }
+        }
+      })
+    },
     /**
      * 修改结点属性，在双击结点时调用
      */
@@ -857,7 +908,7 @@ export default {
         url: d.url,
         fontSize: d.fontSize,
       })
-    }
+    },
   }
 }
 </script>
@@ -872,9 +923,9 @@ export default {
   right: 0;
   bottom: 0;
 }
-.circle_operate {
+/* .circle_operate {
   display: none;
-}
+} */
 circle {
   cursor: pointer;
 }

@@ -201,6 +201,7 @@ export default {
 
 <style>
 @import url('./style/globalColor.css');
+@import url('./style/ele.css');
 * {
   --app-height: 100vh;
   --nav-height: 65px;
