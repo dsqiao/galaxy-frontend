@@ -1,6 +1,6 @@
 <template>
   <div id="graphInfoContainer">
-    <div id="mode_name">{{ mode_name }}</div>
+    <div class="graph-title">{{ domain }}</div>
     <div id="graphInfo">
       <span class="inner-info">结点数量: {{ graph.nodes.length }}</span>
       <span class="inner-info">关系数量: {{ graph.links.length }}</span>
@@ -21,7 +21,7 @@
 <script>
 export default {
   name: 'GraphInfo',
-  props: ['graph', 'mode_name', 'analyzedProperties'],
+  props: ['graph', 'mode_name', 'analyzedProperties', 'domain'],
   data () {
     return {}
   },
@@ -32,21 +32,25 @@ export default {
 <style scoped>
 #graphInfoContainer {
   position: absolute;
-  right: 0;
+  top: 15px;
+  right: 20px;
   color: white;
-  margin: 15px 20px 0 0;
   text-align: center;
-  width: 160px;
+  width: 130px;
 }
-#mode_name {
+.graph-title {
   background-color: rgba(30, 144, 255, 0.8);
   color: white;
-  font-size: 16px;
+  font-size: 17px;
   border-radius: 20px;
   padding: 5px 10px;
   margin-bottom: 7%;
-  height: 20px;
+  height: 30px;
   line-height: 20px;
+  box-sizing: border-box;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  overflow: hidden;
 }
 
 #graphInfo .inner-info {

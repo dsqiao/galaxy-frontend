@@ -50,13 +50,9 @@
 </template>
 
 <script>
-import CreateDomainForm from './form/CreateDomainForm.vue'
 import $ from 'jquery'
 export default {
   name: 'GraphList',
-  components: {
-    CreateDomainForm,
-  },
   props: ['domain'],
   data () {
     return {
@@ -246,6 +242,10 @@ export default {
   font-weight: 400;
   margin-left: 18px;
   height: 22px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 70%;
+  overflow: hidden;
 }
 .deleteHint {
   position: absolute;

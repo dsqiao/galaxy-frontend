@@ -50,7 +50,6 @@ export default {
         document.body.append(mask)
       } else {
         document.getElementById('mask').className = 'mask-out'
-        console.log(document.getElementById('mask'))
         setTimeout(() => {
           document.body.removeChild(document.getElementById('mask'))
         }, 400) // 等动画做完再删 mask
@@ -65,8 +64,6 @@ export default {
       this.closeDrawer()
     }
   },
-  mounted: {},
-  destroyed: {},
 }
 </script>
 

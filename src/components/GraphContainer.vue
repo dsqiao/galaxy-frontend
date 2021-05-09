@@ -1,7 +1,11 @@
 <template>
   <div class="graphContainer" id="graphContainer">
-    <GraphInfo v-bind:graph='graph' :mode_name='mode_name' :analyzedProperties='analyzedProperties'/>
-    <!-- <OperationList v-show="mode_name === '力导图模式'"/> -->
+    <GraphInfo
+      v-bind:graph="graph"
+      :mode_name="mode_name"
+      :domain="domain"
+      :analyzedProperties="analyzedProperties"
+    />
   </div>
 </template>
 
@@ -10,13 +14,36 @@ import $ from 'jquery'
 import _ from 'underscore'
 import * as d3 from 'd3'
 import GraphInfo from './GraphInfo.vue'
-import OperationList from './OperationList.vue'
+import { mapState, mapMutations } from 'vuex'
 export default {
   name: 'GraphContainer',
-  props: ['domain'],
+  props: {
+    domain: {
+      type: String,
+    },
+    createNodeMode: {
+      type: Boolean,
+      default: false,
+    },
+    createLinkMode: {
+      type: Boolean,
+      default: false,
+    },
+    graphMode: {
+      type: Boolean,
+      default: true,
+    }
+  },
   components: {
     GraphInfo,
-    OperationList,
+  },
+  watch: {
+    graphMode: function (newVal, oldVal) {
+      this.updateGraph(newVal)
+    }
+  },
+  computed: {
+    ...mapState(['isEditingNodeAttr'])
   },
   data () {
     return {
@@ -26,7 +53,6 @@ export default {
       },
       mode_name: '力导图模式',
       analyzedProperties: {},
-      graphMode: true,
     }
   },
   mounted: function () {
@@ -45,12 +71,16 @@ export default {
     this.nodeGroup = this.svg.append('g').attr('class', 'node')
     this.nodeTextGroup = this.svg.append('g').attr('class', 'nodeText')
     this.nodeButtonGroup = this.svg.append('g').attr('class', 'nodeButton')
-    this.tooltip = this.svg.append('div').style('opacity', 0)
     this.svg.on('click', () => {
       d3.selectAll('.buttonGroup').classed('circle_operate', true)
     }, 'false')
   },
   methods: {
+    ...mapMutations([
+      'switchIsEditingNodeAttr',
+      'switchIsEditingLinkAttr',
+      'setNodeAttr',
+    ]),
     changeDomain (name) {
       const _this = this
       $.ajax({
@@ -73,7 +103,7 @@ export default {
         }
       })
     },
-    updateGraph (mode) {
+    updateGraph (mode) { // 初始化渲染图谱
       const _this = this
       const lks = this.graph.links
       let nodes = this.graph.nodes
@@ -458,8 +488,9 @@ export default {
       nodeEnter.on('mouseout', function (d, i) {
         clearTimeout(_this.timer)
       })
-      nodeEnter.on('dblclick', function (d) {
-        _this.addNodeProperty(d)// 双击更新节点名称
+      // 双击编辑结点属性
+      nodeEnter.on('dblclick', function (event, d) { // d3 api 改了，多传了个 event 作为第一个参数
+        _this.updateNodeProperty(d)
       })
       nodeEnter.on('mouseenter', function (d) {
         let aa = d3.select(this)._groups[0][0]
@@ -813,14 +844,33 @@ export default {
         _this.nodeButtonAction = 'DELETE'
       })
     },
+    /**
+     * 修改结点属性，在双击结点时调用
+     */
+    updateNodeProperty (d) {
+      this.switchIsEditingNodeAttr(true)
+      this.setNodeAttr({
+        name: d.name,
+        r: d.r,
+        color: d.color,
+        type: d.type,
+        url: d.url,
+        fontSize: d.fontSize,
+      })
+    }
   }
 }
 </script>
 
 <style>
 #graphContainer {
-  width: 100%;
-  height: 100%;
+  overflow: hidden;
+  position: fixed;
+  top: var(--nav-height);
+  left: var(--toolbar-width);
+  float: right;
+  right: 0;
+  bottom: 0;
 }
 .circle_operate {
   display: none;

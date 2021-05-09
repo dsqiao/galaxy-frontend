@@ -36,8 +36,12 @@
         v-on:setGraph="this.setGraph"
         v-bind:domain="domain"
         ref="graphContainer"
+        :graphMode.sync="graphMode"
       >
       </GraphContainer>
+      <Drawer :visible.sync="isEditingNodeAttr" title="属性编辑" width="300px">
+        <NodeAttrEditForm></NodeAttrEditForm>
+      </Drawer>
     </div>
   </div>
 </template>
@@ -49,6 +53,8 @@ import GraphList from './components/GraphList.vue'
 import Drawer from './components/Drawer.vue'
 import OpSvg from './components/OpSvg'
 import AttributionTable from './components/AttributionTable'
+import NodeAttrEditForm from './components/form/NodeAttrEditForm'
+import { mapMutations } from 'vuex'
 export default {
   name: 'App',
   components: {
@@ -58,6 +64,52 @@ export default {
     Drawer,
     OpSvg,
     AttributionTable,
+    NodeAttrEditForm,
+  },
+  watch: {
+    createNodeMode (val) {
+      this.operationList[4].isActive = val
+    },
+    createLinkMode (val) {
+      this.operationList[5].isActive = val
+    },
+    graphMode (val) {
+      this.operationList[6].isActive = !val
+    }
+  },
+  computed: {
+    isEditingNodeAttr: {
+      get: function () {
+        return this.$store.state.isEditingNodeAttr
+      },
+      set: function (val) {
+        this.switchIsEditingNodeAttr(val)
+      }
+    },
+    isEditingLinkAttr: {
+      get: function () {
+        return this.$store.state.isEditingLinkAttr
+      },
+      set: function (val) {
+        this.switchIsEditingLinkAttr(val)
+      }
+    },
+    createNodeMode: {
+      get: function () {
+        return this.$store.state.createNodeMode
+      },
+      set: function (val) {
+        this.setCreateNodeMode(val)
+      }
+    },
+    createLinkMode: {
+      get: function () {
+        return this.$store.state.createLinkMode
+      },
+      set: function (val) {
+        this.setCreateLinkMode(val)
+      }
+    }
   },
   data () {
     const _this = this
@@ -66,7 +118,7 @@ export default {
       listDrawer: false, // 图谱列表抽屉是否打开
       tableDrawer: false, // 图谱表格抽屉是否打开
       createDomainDrawer: false,
-      createNodeMode: false,
+      graphMode: true, // 当前处于力导图还是排版
       graph: {
         nodes: [],
         links: [],
@@ -89,39 +141,59 @@ export default {
         click: () => { }
       }, {
         path: require('./assets/svg/circle.svg'),
-        activePath: require('./assets/svg/activeCircle.svg'),
+        activePath: require('./assets/svg/circleActive.svg'),
         hint: '新建结点',
         click: _this.clickCreateNodeSvg,
         isActive: false,
       }, {
         path: require('./assets/svg/link.svg'),
-        activePath: require('./assets/svg/activeLink.svg'),
+        activePath: require('./assets/svg/linkActive.svg'),
         hint: '新建关系',
         click: _this.clickCreateLinkSvg,
-        isActive: false
+        isActive: false,
+      }, {
+        path: require('./assets/svg/mode.svg'),
+        activePath: require('./assets/svg/modeActive.svg'),
+        hint: '排版模式',
+        click: _this.switchGraphMode,
+        isActive: false,
       }]
     }
   },
   methods: {
+    ...mapMutations([
+      'switchIsEditingNodeAttr',
+      'switchIsEditingLinkAttr',
+      'setCreateNodeMode',
+      'setCreateLinkMode',
+    ]),
     // 当 graphList 更改 domain 时，graphContainer 相应更改
     changeDomain (name) {
       this.domain = name
       this.$refs.graphContainer.changeDomain(name)
     },
     // graphContainer 更改了 graph 时，table 也需要相应更改
-    setGraph (nodes, links) { // 没调用
+    setGraph (nodes, links) {
       this.graph.nodes = nodes
       this.graph.links = links
     },
     clickCreateNodeSvg () {
       // 点一下激活，点两下取消
-      this.createNodeMode = !this.createNodeMode
-      // 激活 svg
-      this.operationList[4].isActive = this.createNodeMode
+      if (!this.graphMode) {
+        alert('请关闭排版模式后再编辑图谱')
+      } else {
+        this.createNodeMode = !this.createNodeMode
+      }
     },
     clickCreateLinkSvg () {
-      this.createLinkMode = !this.createLinkMode
-      this.operationList[5].isActive = this.createLinkMode
+      if (!this.graphMode) {
+        alert('请关闭排版模式后再编辑图谱')
+      } else {
+        this.createLinkMode = !this.createLinkMode
+      }
+    },
+    switchGraphMode () {
+      this.graphMode = !this.graphMode
     }
   }
 }
@@ -164,5 +236,6 @@ export default {
   align-items: center;
   padding: 24px 18px;
   box-sizing: border-box;
+  user-select: none; /* 阻止双击选中 */
 }
 </style>
