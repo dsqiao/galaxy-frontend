@@ -112,7 +112,6 @@ export default {
         success: function (result) {
           if (result.code === 200) {
             if (result.data !== null) {
-              console.log(result.data)
               _this.graph.nodes = result.data.node
               _this.graph.links = result.data.relationship
               _this.$emit('setGraph', _this.graph.nodes, _this.graph.links)
@@ -190,19 +189,13 @@ export default {
 
         nodes = res
       }
-      _this.updateNodeAndLink(nodes, lks, links)
-      // 为每一个结点定制按钮组，nodeButton 就是每个点四周那一圈
-      _this.addNodeButton()
-      _this.updateLinkAttr(links)
+      this.updateNodeAndLink(nodes, lks, links)
+      // 为每一个结点定制按钮组，nodeButton 就是每个点四周那一圈，位置是在 svg>defs，不会显示
+      this.addNodeButton()
+      this.updateLinkAttr(links)
 
       // 更新节点按钮组
-      d3.selectAll('.nodeButton >g').remove()
-      let nodeButton = _this.nodeButtonGroup.selectAll('.nodeButton').data(nodes, function (d) {
-        return d
-      })
-      nodeButton.exit().remove()
-      const nodeButtonEnter = _this.drawNodeButton(nodeButton)
-      nodeButton = nodeButtonEnter.merge(nodeButton)
+      let nodeButton = this.drawNodeButton(nodes)
 
       // 更新节点
       let node = _this.nodeGroup.selectAll('circle').data(nodes, function (d) {
@@ -322,7 +315,6 @@ export default {
           .outerRadius(node.r + node.r)
         buttonEnter.append('path')
           .attr('d', function (d) { // d 描述路径
-            console.log(d)
             return arc(d)
           })
           .attr('fill', '#D2D5DA') // 描述扇区颜色
@@ -331,7 +323,7 @@ export default {
           .attr('stroke-width', 1) // 边界宽度
         buttonEnter.append('text')
           .attr('transform', function (d, i) {
-            return 'translate(' + arc.centroid(d) + ')'
+            return `translate(${arc.centroid(d)})`
           })
           .attr('text-anchor', 'middle')
           .text(function (d, i) {
@@ -383,8 +375,16 @@ export default {
         })
       }
     },
-    drawNodeButton (nodeButton) {
-      return nodeButton.enter().append('g').append('use')//  为每个节点组添加一个 use 子元素
+    drawNodeButton (nodes) {
+      d3.selectAll('.nodeButton>g').remove() // 删除原来的
+      let nodeButton = this.nodeButtonGroup
+        .selectAll('div') // 进到 .nodeButton 下
+        .data(nodes, function (d) {
+          return d
+        })
+      const nodeButtonEnter = nodeButton.enter()
+        .append('g')
+        .append('use')
         .attr('r', function (d) {
           return d.r
         })
@@ -397,6 +397,8 @@ export default {
         .style('opacity', 0)
         .style('display', 'none')
         .classed('circle_operate', true)
+      nodeButton = nodeButtonEnter.merge(nodeButton)
+      return nodeButton
     },
     drawNode (node) {
       let _this = this
