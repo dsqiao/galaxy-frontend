@@ -925,9 +925,6 @@ export default {
   right: 0;
   bottom: 0;
 }
-/* .circle_operate {
-  display: none;
-} */
 circle {
   cursor: pointer;
 }

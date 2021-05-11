@@ -11,7 +11,8 @@
   --icon-active: var(--blue-500);
   --tool-bar-svg-background: var(--gray-800);
   --graph-list-svg-background: var(--gray-700);
+  --graph-list-svg-background-active: rgba(79, 192, 141, 0.35);
   --drawer-background: var(--gray-900);
   --drawer-background-hover: var(--gray-800);
-  --active-graph-list-item: var(--gray-800);
+  --active-graph-list-item: rgba(79, 192, 141, 0.55);
 }

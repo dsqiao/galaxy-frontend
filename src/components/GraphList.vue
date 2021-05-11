@@ -29,6 +29,7 @@
       <span v-else class="domainNameText">{{ m.name }}</span>
       <div
         class="deleteDomainSvg"
+        :class="m.id === activeId && 'deleteDomainSvgActive'"
         :id="`delete__${m.id}`"
         style="display: none"
         @click="deleteDomain(m)"
@@ -221,7 +222,6 @@ export default {
   background-color: var(--drawer-background-hover);
   transition-duration: 0.3s;
 }
-
 .deleteDomainSvg {
   display: flex;
   align-items: center;
@@ -236,6 +236,9 @@ export default {
 .deleteDomainSvg:hover {
   background-color: var(--graph-list-svg-background);
   transition: 0.3s;
+}
+.deleteDomainSvgActive:hover {
+  background-color: var(--graph-list-svg-background-active);
 }
 .domainNameText {
   color: var(--gray-400);
