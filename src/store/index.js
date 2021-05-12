@@ -7,6 +7,7 @@ export default new Vuex.Store({
     isEditingNodeAttr: false,
     isEditingLinkAttr: false,
     nodeAttr: { // 正在被编辑的结点的属性
+      id: null,
       name: '',
       r: null,
       color: '',

@@ -69,12 +69,7 @@ export default {
     this.svg.on('click', (event) => {
       if (event.srcElement.tagName !== 'circle') {
         // 点的不是 node ，隐藏所有 btnGroup
-        d3.selectAll('.buttonGroup').classed('circle_operate', true)
-          .transition()
-          .style('opacity', 0)
-          .on('end', function () {
-            d3.select(this).style('display', 'none')
-          })
+        this.closeAllBtnGroup()
       }
     }, 'false')
     document.getElementById('graphContainer').addEventListener('click', (event) => {
@@ -188,7 +183,6 @@ export default {
       // 为每一个结点定制按钮组，nodeButton 就是每个点四周那一圈，位置是在 svg>defs，不会显示
       this.addNodeButton()
       this.updateLinkAttr(links)
-      console.log(lks)
 
       // 画结点
       {
@@ -228,6 +222,7 @@ export default {
           .data(cleanNodes)
           .join('circle')
           .attr('r', d => d.r)
+          .attr('class', d => `circle_${d.uuid}`)
           .style('stroke', d => d.color)
           .style('stroke-width', '2')
           .attr('fill', d => d.color)
@@ -236,15 +231,11 @@ export default {
             _this.updateNodeProperty(d)
           })
           .on('mouseenter', function (d) {
-            // let aa = d3.select(this)._groups[0][0]
-            // if (aa.classList.contains('selected')) return
             d3.select(this)
               .transition()
               .style('stroke-width', '7')
           })
           .on('mouseleave', function (d) {
-            // let aa = d3.select(this)._groups[0][0]
-            // if (aa.classList.contains('selected')) return
             d3.select(this)
               .transition()
               .style('stroke-width', '2')
@@ -1003,8 +994,10 @@ export default {
      * 修改结点属性，在双击结点时调用
      */
     updateNodeProperty (d) {
+      this.closeAllBtnGroup()
       this.switchIsEditingNodeAttr(true)
       this.setNodeAttr({
+        id: d.uuid,
         name: d.name,
         r: d.r,
         color: d.color,
@@ -1013,6 +1006,14 @@ export default {
         fontSize: d.fontSize,
       })
     },
+    closeAllBtnGroup () {
+      d3.selectAll('.buttonGroup').classed('circle_operate', true)
+        .transition()
+        .style('opacity', 0)
+        .on('end', function () {
+          d3.select(this).style('display', 'none')
+        })
+    }
   }
 }
 </script>
