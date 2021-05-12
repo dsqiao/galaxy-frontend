@@ -60,11 +60,6 @@ export default {
     this.svg = graphContainer.append('svg')
     this.svg.attr('width', '100%')
     this.svg.attr('height', '100%')
-    this.simulation = d3.forceSimulation(this.graph.nodes)
-      .force('link', d3.forceLink(this.graph.links).distance(d => Math.floor(Math.random() * 500) + 200).id(d => d.uuid))
-      .force('charge', d3.forceManyBody().strength(-400))
-      .force('collide', d3.forceCollide())
-      .force('center', d3.forceCenter(this.svg.width / 2, (this.svg.height - 200) / 2))
     this.linkGroup = this.svg.append('g').attr('class', 'link')
     this.linkTextGroup = this.svg.append('g').attr('class', 'linkText')
     this.linkMarkerGroup = this.svg.append('g').attr('class', 'linkMarker')
@@ -193,29 +188,196 @@ export default {
       // 为每一个结点定制按钮组，nodeButton 就是每个点四周那一圈，位置是在 svg>defs，不会显示
       this.addNodeButton()
       this.updateLinkAttr(links)
+      console.log(lks)
 
-      // 更新节点按钮组
-      let nodeButton = this.drawNodeButton(nodes)
+      // 画结点
+      {
+        for (let i of nodes) {
+          delete i.fx
+          delete i.fy
+        }
+        const cleanNodes = JSON.parse(JSON.stringify(nodes)).map(d => Object.create(d))
+        // console.log(cleanLinks)
+        const graphWidth = parseInt(this.svg.style('width').slice(0, -2))
+        const graphHeight = parseInt(this.svg.style('height').slice(0, -2))
+        let simulation = d3.forceSimulation().nodes(cleanNodes)
+          .force('charge', d3.forceManyBody().strength(-100))
+          .force('link', d3.forceLink(links).distance(d => 180).id(d => d.uuid))
+          .force('center', d3.forceCenter(graphWidth / 2, graphHeight / 2))
+        // const myLink = this.linkGroup
+        //   .selectAll('path')
+        //   .data(links)
+        //   .join('path')
+        //   .attr('stroke-width', 2)
+        //   .attr('stroke', '#fff')
+        //   .attr('fill', '#fff')
+        //   .attr('id', d => `invis_${d.lk.sourceid}-${d.lk.name}-${d.lk.targetid}`)
+        //   .attr('marker-end', d => `url(#arrow${d.lk.sourceid}-${d.lk.targetid})`)
+        //   .attr('class', function (d) {
+        //     let sourceName, targetName
+        //     for (let node of _this.graph.nodes) {
+        //       if (node.uuid === d.lk.sourceid) {
+        //         sourceName = node.name
+        //       } else if (node.uuid === d.lk.targetid) {
+        //         targetName = node.name
+        //       }
+        //     }
+        //   })
+        const myNode = this.nodeGroup
+          .selectAll('circle')
+          .data(cleanNodes)
+          .join('circle')
+          .attr('r', d => d.r)
+          .style('stroke', d => d.color)
+          .style('stroke-width', '2')
+          .attr('fill', d => d.color)
+          .attr('id', d => d.uuid)
+          .on('dblclick', function (event, d) { // d3 api 改了，多传了个 event 作为第一个参数
+            _this.updateNodeProperty(d)
+          })
+          .on('mouseenter', function (d) {
+            // let aa = d3.select(this)._groups[0][0]
+            // if (aa.classList.contains('selected')) return
+            d3.select(this)
+              .transition()
+              .style('stroke-width', '7')
+          })
+          .on('mouseleave', function (d) {
+            // let aa = d3.select(this)._groups[0][0]
+            // if (aa.classList.contains('selected')) return
+            d3.select(this)
+              .transition()
+              .style('stroke-width', '2')
+          })
+          .on('click', function (event, d) {
+            const thisCircle = _this.svg.select('.out_buttonGroup_' + d.uuid) // 此次点击的 node 元素
+            // 若 btnGroup 已经打开，则关闭它
+            if (!thisCircle._groups[0][0].classList.contains('circle_operate')) {
+              thisCircle.classed('circle_operate', true)
+                .transition()
+                .style('opacity', 0)
+                .on('end', function () {
+                  d3.select(this).style('display', 'none')
+                })
+              return
+            }
+            // 所有结点的外圈全部隐藏
+            _this.svg.selectAll('.buttonGroup').classed('circle_operate', true)
+              .transition()
+              .style('opacity', 0)
+              .on('end', function () {
+                d3.select(this).style('display', 'none')
+              })
+            // 被点击结点的外圈打开
+            thisCircle.classed('circle_operate', false)
+              .style('display', 'block')
+              .transition()
+              .style('opacity', 1)
+            _this.graphEntity = d
+            _this.selectNodeId = d.uuid
+            _this.selectnodename = d.name
+            // 如果当前状态为添加关系状态
+            if (_this.isAddLink) {
+              _this.selectTargetNodeId = d.uuid
+              if (_this.selectSourceNodeId === _this.selectTargetNodeId || _this.selectSourceNodeId === 0 || _this.selectTargetNodeId === 0) return
+              _this.createLink(_this.selectSourceNodeId, _this.selectTargetNodeId, 'RE')
+              _this.selectSourceNodeId = 0
+              _this.selectTargetNodeId = 0
+              d.fixed = false
+              event.stopPropagation()
+            }
+          })
+          .call(d3.drag()
+            .on('start', (event, d) => {
+              if (!event.active) simulation.alphaTarget(0.3).restart()
+              d.fx = d.x
+              d.fy = d.y
+            })
+            .on('drag', (event, d) => {
+              d.fx = event.x
+              d.fy = event.y
+            })
+            .on('end', (event, d) => {
+              if (!event.active) simulation.alphaTarget(0)
+              d.fx = null
+              d.fy = null
+              // d.fx = event.x
+              // d.fy = event.y
+              // let domain = this.domain
+              // let uuid = d.uuid
+              // let fx = d.fx
+              // let fy = d.fy
+              // let ajaxData = { domain: domain, uuid: uuid, fx: fx, fy: fy }
+              // $.ajax({
+              //   data: ajaxData,
+              //   type: 'POST',
+              //   url: 'http://localhost:8081/update_coordinate_of_node',
+              //   success: function (result) {
+              //     if (result.code === 200) {
+              //     }
+              //   },
+              //   error: function (XMLHttpRequest, textStatus, errorThrown) {
+              //     alert(errorThrown)
+              //   }
+              // })
+            })
+          )
 
-      // 更新节点
-      let node = _this.nodeGroup.selectAll('circle').data(nodes, function (d) {
-        return d.uuid
-      })
-      node.exit().remove()
-      const nodeEnter = _this.drawNode(node)
-      node = nodeEnter.merge(node).text(function (d) {
-        return d.name // 这一行决定 circle 的 text 值，会在 html 中有，但是不会渲染
-      })
+        // 更新节点文字
+        const nodeText = this.nodeTextGroup
+          .selectAll('text')
+          .data(cleanNodes)
+          .join('text')
+          .attr('text-anchor', 'middle')
+          .attr('dominant-baseline', 'middle')
+          .attr('pointer-events', 'none')
+          .style('font-size', d => d.fontSize)
+          .style('fill', '#000')
+          .text(d => d.name)
 
-      // 更新节点文字
-      let nodeText = _this.nodeTextGroup.selectAll('text').data(nodes, function (d) {
-        return d.uuid
-      })
-      nodeText.exit().remove()
-      const nodeTextEnter = _this.drawNodeText(nodeText)
-      nodeText = nodeTextEnter.merge(nodeText).text(function (d) {
-        return d.name // 这一行觉得 nodeText 的渲染
-      })
+        // 更新结点四周按钮
+        const nodeButton = this.nodeButtonGroup
+          .selectAll('g')
+          .data(cleanNodes)
+          .join('g')
+          .append('use')
+          .attr('r', d => d.r)
+          .attr('xlink:href', function (d) {
+            return '#out_circle' + d.uuid
+          }) //  指定 use 引用的内容
+          .attr('class', function (d, i) {
+            return 'buttonGroup out_buttonGroup_' + d.uuid
+          })
+          .style('opacity', 0)
+          .style('display', 'none')
+          .classed('circle_operate', true)
+
+        simulation.on('tick', () => {
+          // myLink
+          //   .attr('d', d => {
+          //     let dx = (d.target.x - d.source.x)
+          //     let dy = (d.target.y - d.source.y)
+          //     let dr = Math.sqrt(dx * dx + dy * dy)
+          //     let unevenCorrection = (d.sameUneven ? 0 : 0.5)
+          //     let curvature = 2
+          //     let arc = (1.0 / curvature) * ((dr * d.maxSameHalf) / (d.sameIndexCorrected - unevenCorrection))
+          //     if (d.sameMiddleLink) {
+          //       arc = 0
+          //     }
+          //     return 'M' + d.source.x + "," + d.source.y + "A" + arc + "," + arc + " 0 0," + d.sameArcDirection + " " + d.target.x + "," + d.target.y
+          //   })
+          nodeButton
+            .attr('cx', d => d.x)
+            .attr('cy', d => d.y)
+            .attr('transform', d => `translate(${d.x}, ${d.y}) scale(1)`)
+          nodeText
+            .attr('x', d => d.x)
+            .attr('y', d => d.y)
+          myNode
+            .attr('cx', d => d.x) // 找不到 d.x，不是 undefinded, 而是 NaN
+            .attr('cy', d => d.y)
+        })
+      }
 
       // 更新连线 links
       // 要先把所有连线删了，不然选择出来的 link 中会含有上一张图谱的连线，导致后序一系列问题。
@@ -256,8 +418,8 @@ export default {
       linkMarker.exit().remove()
       const linkMarkerEnter = _this.drawLinkMarker(linkMarker)
       linkMarker = linkMarkerEnter.merge(linkMarker)
-      _this.addD3ToNodes(nodes, links, node, link, nodeButton, nodeText)
-      _this.addZoomToNodes()
+      // _this.addD3ToNodes(node, links, node, link, nodeButton, nodeText)
+      // _this.addZoomToNodes()
     },
     deepClone (obj) {
       return JSON.parse(JSON.stringify(obj))
@@ -375,33 +537,11 @@ export default {
         })
       }
     },
-    drawNodeButton (nodes) {
-      d3.selectAll('.nodeButton>g').remove() // 删除原来的
-      let nodeButton = this.nodeButtonGroup
-        .selectAll('div') // 进到 .nodeButton 下
-        .data(nodes, function (d) {
-          return d
-        })
-      const nodeButtonEnter = nodeButton.enter()
-        .append('g')
-        .append('use')
-        .attr('r', function (d) {
-          return d.r
-        })
-        .attr('xlink:href', function (d) {
-          return '#out_circle' + d.uuid
-        }) //  指定 use 引用的内容
-        .attr('class', function (d, i) {
-          return 'buttonGroup out_buttonGroup_' + d.uuid
-        })
-        .style('opacity', 0)
-        .style('display', 'none')
-        .classed('circle_operate', true)
-      nodeButton = nodeButtonEnter.merge(nodeButton)
-      return nodeButton
-    },
     drawNode (node) {
       let _this = this
+      node.selectAll('circle')
+        .data(this.graph.nodes.map(d => Object.create(d)))
+        .join('circle')
       let nodeEnter = node.enter().append('circle')
       // 结点半径
       node.attr('r', function (d) {
@@ -428,7 +568,10 @@ export default {
           return 0
         }
         return 1
-      })
+      }).call(d3.drag()
+        .on('start', _this.dragStarted)
+        .on('drag', _this.dragged)
+        .on('end', _this.dragEnded))
 
       // 结点半径
       nodeEnter.attr('r', function (d) {
@@ -562,7 +705,7 @@ export default {
       if (!event.active) this.simulation.alphaTarget(0.3).restart()
       d.fx = d.x
       d.fy = d.y
-      d.fixed = true
+      // d.fixed = true
     },
     dragged (event, d) {
       d.fx = event.x
@@ -589,61 +732,6 @@ export default {
           alert(errorThrown)
         }
       })
-    },
-    drawNodeText (nodeText) {
-      let _this = this
-      let nodeTextEnter = nodeText.enter().append('text')
-        .style('fill', '#fff')
-        .style('font-size', function (d) {
-          if (d.fontSize !== null) { return d.fontSize }
-          return 16
-        })
-        .attr('dy', 4)
-        .attr('font-family', '微软雅黑')
-        .attr('text-anchor', 'middle')
-        .attr('pointer-events', 'none') // 让文字不能被光标选中
-        .text(function (d) {
-          // 这段代码不会影响结点名称的渲染，故注释掉
-          // if (typeof (d.name) === 'undefined') return '';
-          // if (d.name.length > 4) {
-          //     console.log('new node text: ', d.name);
-          //     return '太长了名字'
-          // }
-          // return d.name;
-        })
-      nodeText.style('font-size', function (d) {
-        return d.fontSize
-      })
-      nodeTextEnter.on('mouseover', function (d, i) {
-        _this.timer = setTimeout(function () {
-          d3.select('#richContainer')
-            .style('position', 'absolute')
-            .style('left', d.x + 'px')
-            .style('top', d.y + 'px')
-            .style('display', 'block')
-          _this.editorContent = ''
-          _this.showImageList = []
-        }, 3000)
-      })
-      nodeTextEnter.on('click', function (event, d) {
-        $('#link_menubar').hide()// 隐藏空白处右键菜单
-        _this.graphEntity = d
-        _this.selectNodeId = d.uuid
-        // 更新工具栏节点信息
-        _this.getCurrentNodeInfo(d)
-        // 添加连线状态
-        if (_this.isAddLink) {
-          _this.selectTargetNodeId = d.uuid
-          if (_this.selectSourceNodeId === _this.selectTargetNodeId || _this.selectSourceNodeId === 0 || _this.selectTargetNodeId === 0) return
-          _this.createLink(_this.selectSourceNodeId, _this.selectTargetNodeId, 'RE')
-          _this.selectSourceNodeId = 0
-          _this.selectTargetNodeId = 0
-          d.fixed = false
-          event.stopPropagation()
-        }
-      })
-
-      return nodeTextEnter
     },
     drawLink (link) {
       let _this = this
@@ -770,7 +858,18 @@ export default {
     },
     addD3ToNodes (nodes, links, node, link, nodeButton, nodeText) {
       let _this = this
-      _this.simulation.nodes(nodes).on('tick', ticked)
+      _this.simulation.on('tick', () => {
+        link
+          // .attr('d', linkArc)
+          .attr('x1', d => d.source.x)
+          .attr('y1', d => d.source.y)
+          .attr('x2', d => d.target.x)
+          .attr('y2', d => d.target.y)
+        // 更新节点坐标
+        nodes
+          .attr('cx', d => d.x)
+          .attr('cy', d => d.y)
+      })
       _this.simulation.force('link').links(links)
       _this.simulation.alphaTarget(1).restart()
 
@@ -788,17 +887,20 @@ export default {
       }
 
       function ticked () {
-        link.attr('d', linkArc)
+        link
+          // .attr('d', linkArc)
+          .attr('x1', d => d.source.x)
+          .attr('y1', d => d.source.y)
+          .attr('x2', d => d.target.x)
+          .attr('y2', d => d.target.y)
         // 更新节点坐标
-        node.attr('cx', d => d.x ? d.x : 0)
-          .attr('cy', d => d.y ? d.y : 0)
+        node
+          .attr('cx', d => d.x)
+          .attr('cy', d => d.y)
         // 更新节点操作按钮组坐标
-        nodeButton.attr('cx', function (d) {
-          return d.x
-        })
-          .attr('cy', function (d) {
-            return d.y
-          })
+        nodeButton
+          .attr('cx', d => d.x)
+          .attr('cy', d => d.y)
         nodeButton.attr('transform', (d) => d.x && d.y
           ? `translate(${d.x}, ${d.y}) scale(1)`
           : 'translate(0, 0) scale(1)'
