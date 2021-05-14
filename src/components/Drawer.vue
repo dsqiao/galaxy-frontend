@@ -35,6 +35,9 @@ export default {
     },
     width: {
       type: String,
+    },
+    closeCallback: {
+      type: Function,
     }
   },
   computed: {},
@@ -59,6 +62,9 @@ export default {
   methods: {
     closeDrawer () {
       this.$emit('update:visible', false)
+      if (typeof this.closeCallback === 'function') {
+        this.closeCallback()
+      }
     },
     handleWrapperClick () {
       this.closeDrawer()

@@ -116,6 +116,7 @@ export default {
     matchDomainGraph (domain, event) {
       this.activeId = domain.id
       this.$emit('changeDomain', domain.name)
+      this.$store.commit('setDomain', domain.name)
     },
     showDeleteSvg (m) {
       document.getElementById(`delete__${m.id}`).style.display = 'flex'

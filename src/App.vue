@@ -23,11 +23,6 @@
             @clickNew="createDomainDrawer = true"
           />
         </Drawer>
-        <Drawer
-          :visible.sync="createDomainDrawer"
-          title="新建图谱"
-          width="300px"
-        />
         <Drawer :visible.sync="tableDrawer" title="属性表" width="400px">
           <AttributionTable :graph="this.graph"></AttributionTable>
         </Drawer>
@@ -39,8 +34,13 @@
         :graphMode.sync="graphMode"
       >
       </GraphContainer>
-      <Drawer :visible.sync="isEditingNodeAttr" title="属性编辑" width="300px">
-        <NodeAttrEditForm></NodeAttrEditForm>
+      <Drawer
+        :visible.sync="isEditingNodeAttr"
+        title="属性编辑"
+        width="max(20%, 240px)"
+        :closeCallback="updateNodeAttr"
+      >
+        <NodeAttrEditForm ref="nodeAttrEditForm"></NodeAttrEditForm>
       </Drawer>
     </div>
   </div>
@@ -55,6 +55,7 @@ import OpSvg from './components/OpSvg'
 import AttributionTable from './components/AttributionTable'
 import NodeAttrEditForm from './components/form/NodeAttrEditForm'
 import { mapMutations } from 'vuex'
+import $ from 'jquery'
 export default {
   name: 'App',
   components: {
@@ -170,6 +171,7 @@ export default {
     // 当 graphList 更改 domain 时，graphContainer 相应更改
     changeDomain (name) {
       this.domain = name
+      this.$store.commit('setDomain', name)
       this.$refs.graphContainer.changeDomain(name)
     },
     // graphContainer 更改了 graph 时，table 也需要相应更改
@@ -194,6 +196,9 @@ export default {
     },
     switchGraphMode () {
       this.graphMode = !this.graphMode
+    },
+    updateNodeAttr () {
+      this.$refs.nodeAttrEditForm.submit()
     }
   }
 }

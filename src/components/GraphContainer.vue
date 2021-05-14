@@ -322,6 +322,7 @@ export default {
           .attr('text-anchor', 'middle')
           .attr('dominant-baseline', 'middle')
           .attr('pointer-events', 'none')
+          .attr('class', d => `nodeText_${d.uuid}`)
           .style('font-size', d => d.fontSize)
           .style('fill', '#000')
           .text(d => d.name)
@@ -449,15 +450,6 @@ export default {
       let pieData = pie(database)
       let nodeButton = this.svg.append('defs')
       nodes.forEach(function (node) {
-        let nodeBtnGroup = nodeButton.append('g')
-          .attr('id', 'out_circle' + node.uuid) // 为每一个节点定制一个按钮组，在画按钮组的时候为其指定该id
-        let buttonEnter = nodeBtnGroup.selectAll('.buttonGroup') // nodeBtnGroup 刚创建
-          .data(pieData)
-          .enter()
-          .append('g')
-          .attr('class', function (d, i) {
-            return 'action_' + i
-          })
         let defaultR = 30
         if (typeof (node.r) === 'undefined') {
           node.r = defaultR
@@ -466,6 +458,15 @@ export default {
         let arc = d3.arc()
           .innerRadius(node.r)
           .outerRadius(node.r + node.r)
+        let nodeBtnGroup = nodeButton.append('g')
+          .attr('id', 'out_circle' + node.uuid) // 为每一个节点定制一个按钮组，在画按钮组的时候为其指定该id
+        let buttonEnter = nodeBtnGroup // nodeBtnGroup 刚创建
+          .selectAll('g')
+          .data(pieData)
+          .join('g')
+          .attr('class', function (d, i) {
+            return 'action_' + i
+          })
         buttonEnter.append('path')
           .attr('d', function (d) { // d 描述路径
             return arc(d)
@@ -964,12 +965,13 @@ export default {
       })
     },
     createSingleNode () {
-      if (this.domain === null || this.domain === '') {
+      const domain = this.domain
+      if (domain === null || domain === '') {
         alert('请先选择图谱')
         return
       }
       let _this = this
-      let data = { name: '', r: 30, domain: _this.domain }
+      let data = { name: '', r: 30, domain: domain }
       $.ajax({
         data: data,
         type: 'POST',
@@ -997,7 +999,7 @@ export default {
       this.closeAllBtnGroup()
       this.switchIsEditingNodeAttr(true)
       this.setNodeAttr({
-        id: d.uuid,
+        uuid: d.uuid,
         name: d.name,
         r: d.r,
         color: d.color,

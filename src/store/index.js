@@ -6,8 +6,9 @@ export default new Vuex.Store({
   state: {
     isEditingNodeAttr: false,
     isEditingLinkAttr: false,
+    domain: '',
     nodeAttr: { // 正在被编辑的结点的属性
-      id: null,
+      uuid: null,
       name: '',
       r: null,
       color: '',
@@ -33,6 +34,9 @@ export default new Vuex.Store({
     },
     setCreateLinkMode (state, val) {
       state.createLinkMode = val
+    },
+    setDomain (state, val) {
+      state.domain = val
     }
   },
   getters: {},
