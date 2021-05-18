@@ -53,6 +53,7 @@ export default {
       },
       mode_name: '力导图模式',
       analyzedProperties: {},
+      nodeButtonAction: '',
     }
   },
   mounted: function () {
@@ -186,37 +187,20 @@ export default {
 
       // 画结点
       {
-        for (let i of nodes) {
-          delete i.fx
-          delete i.fy
-        }
+        // for (let i of nodes) {
+        //   delete i.fx
+        //   delete i.fy
+        // }
         const cleanNodes = JSON.parse(JSON.stringify(nodes)).map(d => Object.create(d))
-        // console.log(cleanLinks)
         const graphWidth = parseInt(this.svg.style('width').slice(0, -2))
         const graphHeight = parseInt(this.svg.style('height').slice(0, -2))
         let simulation = d3.forceSimulation().nodes(cleanNodes)
           .force('charge', d3.forceManyBody().strength(-100))
           .force('link', d3.forceLink(links).distance(d => 180).id(d => d.uuid))
           .force('center', d3.forceCenter(graphWidth / 2, graphHeight / 2))
-        // const myLink = this.linkGroup
-        //   .selectAll('path')
-        //   .data(links)
-        //   .join('path')
-        //   .attr('stroke-width', 2)
-        //   .attr('stroke', '#fff')
-        //   .attr('fill', '#fff')
-        //   .attr('id', d => `invis_${d.lk.sourceid}-${d.lk.name}-${d.lk.targetid}`)
-        //   .attr('marker-end', d => `url(#arrow${d.lk.sourceid}-${d.lk.targetid})`)
-        //   .attr('class', function (d) {
-        //     let sourceName, targetName
-        //     for (let node of _this.graph.nodes) {
-        //       if (node.uuid === d.lk.sourceid) {
-        //         sourceName = node.name
-        //       } else if (node.uuid === d.lk.targetid) {
-        //         targetName = node.name
-        //       }
-        //     }
-        //   })
+          .force('x', d3.forceX(graphWidth / 2).strength(0.01))
+          .force('y', d3.forceY(graphHeight / 2).strength(0.01))
+
         const myNode = this.nodeGroup
           .selectAll('circle')
           .data(cleanNodes)
@@ -292,25 +276,25 @@ export default {
               if (!event.active) simulation.alphaTarget(0)
               d.fx = null
               d.fy = null
-              // d.fx = event.x
-              // d.fy = event.y
-              // let domain = this.domain
-              // let uuid = d.uuid
-              // let fx = d.fx
-              // let fy = d.fy
-              // let ajaxData = { domain: domain, uuid: uuid, fx: fx, fy: fy }
-              // $.ajax({
-              //   data: ajaxData,
-              //   type: 'POST',
-              //   url: 'http://localhost:8081/update_coordinate_of_node',
-              //   success: function (result) {
-              //     if (result.code === 200) {
-              //     }
-              //   },
-              //   error: function (XMLHttpRequest, textStatus, errorThrown) {
-              //     alert(errorThrown)
-              //   }
-              // })
+              d.fx = event.x
+              d.fy = event.y
+              let domain = this.domain
+              let uuid = d.uuid
+              let fx = d.fx
+              let fy = d.fy
+              let ajaxData = { domain: domain, uuid: uuid, fx: fx, fy: fy }
+              $.ajax({
+                data: ajaxData,
+                type: 'POST',
+                url: 'http://localhost:8081/update_coordinate_of_node',
+                success: function (result) {
+                  if (result.code === 200) {
+                  }
+                },
+                error: function (XMLHttpRequest, textStatus, errorThrown) {
+                  alert(errorThrown)
+                }
+              })
             })
           )
 
@@ -344,20 +328,30 @@ export default {
           .style('display', 'none')
           .classed('circle_operate', true)
 
+        while (document.getElementsByClassName('link')[0].children.length > 0) {
+          document.getElementsByClassName('link')[0].children[0].remove()
+        }
+        let link = _this.linkGroup.selectAll('.link >path').data(links, function (d) {
+          return d.uuid
+        })
+        link.exit().remove()
+        const linkEnter = _this.drawLink(link)
+        link = linkEnter.merge(link)
+
         simulation.on('tick', () => {
-          // myLink
-          //   .attr('d', d => {
-          //     let dx = (d.target.x - d.source.x)
-          //     let dy = (d.target.y - d.source.y)
-          //     let dr = Math.sqrt(dx * dx + dy * dy)
-          //     let unevenCorrection = (d.sameUneven ? 0 : 0.5)
-          //     let curvature = 2
-          //     let arc = (1.0 / curvature) * ((dr * d.maxSameHalf) / (d.sameIndexCorrected - unevenCorrection))
-          //     if (d.sameMiddleLink) {
-          //       arc = 0
-          //     }
-          //     return 'M' + d.source.x + "," + d.source.y + "A" + arc + "," + arc + " 0 0," + d.sameArcDirection + " " + d.target.x + "," + d.target.y
-          //   })
+          link
+            .attr('d', d => {
+              let dx = (d.target.x - d.source.x)
+              let dy = (d.target.y - d.source.y)
+              let dr = Math.sqrt(dx * dx + dy * dy)
+              let unevenCorrection = (d.sameUneven ? 0 : 0.5)
+              let curvature = 2
+              let arc = (1.0 / curvature) * ((dr * d.maxSameHalf) / (d.sameIndexCorrected - unevenCorrection))
+              if (d.sameMiddleLink) {
+                arc = 0
+              }
+              return 'M' + d.source.x + "," + d.source.y + "A" + arc + "," + arc + " 0 0," + d.sameArcDirection + " " + d.target.x + "," + d.target.y
+            })
           nodeButton
             .attr('cx', d => d.x)
             .attr('cy', d => d.y)
@@ -374,15 +368,6 @@ export default {
       // 更新连线 links
       // 要先把所有连线删了，不然选择出来的 link 中会含有上一张图谱的连线，导致后序一系列问题。
       // 删的时候注意，不能按index从小到大删，会出现删不干净的情况
-      while (document.getElementsByClassName('link')[0].children.length > 0) {
-        document.getElementsByClassName('link')[0].children[0].remove()
-      }
-      let link = _this.linkGroup.selectAll('.link >path').data(links, function (d) {
-        return d.uuid
-      })
-      link.exit().remove()
-      const linkEnter = _this.drawLink(link)
-      link = linkEnter.merge(link)
 
       // 更新连线文字
       _this.linkTextGroup.selectAll('text').data(links, function (d) {
@@ -491,6 +476,57 @@ export default {
           })
           .attr('font-size', 10)
           .attr('cursor', 'pointer')
+      })
+      const _this = this
+      // 按钮组事件绑定
+      console.log(_this.svg.selectAll('.buttonGroup'))
+      _this.svg.selectAll(".buttonGroup").on("click", function (d, i) {
+        console.log('监听到 buttonGroup 点击')
+        if (_this.nodeButtonAction) {
+          switch (_this.nodeButtonAction) {
+            case "EDIT":
+              _this.isedit = true
+              _this.propactiveName = 'propedit'
+              _this.txx = d.x
+              _this.tyy = d.y
+              _this.addNodeProperty(d)
+              break
+            case "MORE":
+              _this.getMoreNode()
+              break
+            case "CHILD":
+              _this.operatetype = 2
+              _this.isbatchcreate = true
+              _this.isedit = false
+              break
+            case "LINK":
+              _this.isAddLink = true // 切换为添加连线状态
+              _this.selectSourceNodeId = d.uuid
+              break
+            case "DELETE":
+              _this.selectNodeId = d.uuid
+              console.log('调用 deleteNode 前')
+              _this.deleteNode('.out_buttonGroup_' + d.uuid)
+              break
+          }
+          _this.nodeButtonAction = ''
+        }
+      })
+      // 按钮组事件绑定
+      _this.svg.selectAll(".action_0").on("click", function (d) {
+        _this.nodeButtonAction = 'EDIT'
+      })
+      _this.svg.selectAll(".action_1").on("click", function (d) {
+        _this.nodeButtonAction = 'MORE'
+      })
+      _this.svg.selectAll(".action_2").on("click", function (d) {
+        _this.nodeButtonAction = 'CHILD'
+      })
+      _this.svg.selectAll(".action_3").on("click", function (d) {
+        _this.nodeButtonAction = 'LINK'
+      })
+      _this.svg.selectAll(".action_4").on("click", function (d) {
+        _this.nodeButtonAction = 'DELETE'
       })
     },
     updateLinkAttr (links) {
@@ -914,55 +950,6 @@ export default {
         d3.selectAll('.nodeButton').attr('transform', event.transform)
       }))
       _this.svg.on('dblclick.zoom', null) // 静止双击缩放
-      // 按钮组事件
-      _this.svg.selectAll('.buttonGroup').on('click', function (d, i) {
-        if (_this.nodeButtonAction) {
-          switch (_this.nodeButtonAction) {
-            case 'EDIT':
-              _this.isedit = true
-              _this.propactiveName = 'propedit'
-              _this.txx = d.x
-              _this.tyy = d.y
-              _this.addNodeProperty(d)
-              break
-            case 'MORE':
-              _this.getMoreNode()
-              break
-            case 'CHILD':
-              _this.operatetype = 2
-              _this.isbatchcreate = true
-              _this.isedit = false
-              break
-            case 'LINK':
-              _this.isAddLink = true // 切换为添加连线状态
-              _this.selectSourceNodeId = d.uuid
-              break
-            case 'DELETE': {
-              _this.selectNodeId = d.uuid
-              let outButtonGroupId = '.out_buttonGroup_' + d.uuid
-              _this.deleteNode(outButtonGroupId)
-              break
-            }
-          }
-          // ACTION = ''// 重置 ACTION
-        }
-      })
-      // 按钮组事件绑定
-      _this.svg.selectAll('.action_0').on('click', function (d) {
-        _this.nodeButtonAction = 'EDIT'
-      })
-      _this.svg.selectAll('.action_1').on('click', function (d) {
-        _this.nodeButtonAction = 'MORE'
-      })
-      _this.svg.selectAll('.action_2').on('click', function (d) {
-        _this.nodeButtonAction = 'CHILD'
-      })
-      _this.svg.selectAll('.action_3').on('click', function (d) {
-        _this.nodeButtonAction = 'LINK'
-      })
-      _this.svg.selectAll('.action_4').on('click', function (d) {
-        _this.nodeButtonAction = 'DELETE'
-      })
     },
     createSingleNode () {
       const domain = this.domain
@@ -1015,7 +1002,43 @@ export default {
         .on('end', function () {
           d3.select(this).style('display', 'none')
         })
-    }
+    },
+    deleteNode (id) {
+      let _this = this
+      let data = { domain: _this.domain, nodeid: _this.selectNodeId }
+      $.ajax({
+        data: data,
+        type: "POST",
+        url: 'http://localhost:8081/delete_node',
+        success: function (result) {
+          if (result.code === 200) {
+            _this.svg.selectAll(id).remove()
+            let delNode = result.data
+            // 删除节点对应的关系
+            for (let i = 0; i < _this.graph.links.length; i++) {
+              if (_this.graph.links[i].sourceid === _this.selectNodeId || _this.graph.links[i].targetid === _this.selectNodeId) {
+                _this.graph.links.splice(i, 1)
+                i = i - 1
+              }
+            }
+            // 删除结点
+            for (let i = 0; i < _this.graph.nodes.length; i++) {
+              if (_this.graph.nodes[i].uuid === _this.selectNodeId) {
+                _this.selectNodeId = 0
+                _this.graph.nodes.splice(i, 1)// 根据索引删除该节点
+                _this.getDomainGraph()
+                _this.resetEntity()
+                _this.$message({
+                  type: 'success',
+                  message: '操作成功!'
+                })
+                break
+              }
+            }
+          }
+        }
+      })
+    },
   }
 }
 </script>

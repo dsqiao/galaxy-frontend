@@ -52,6 +52,7 @@
 
 <script>
 import $ from 'jquery'
+import axios from 'axios'
 export default {
   name: 'GraphList',
   props: ['domain'],
@@ -99,19 +100,19 @@ export default {
     },
     getDomainList () {
       const _this = this
-      $.ajax({
-        data: {},
-        type: 'POST',
-        url: 'http://localhost:8081/get_graph',
-        success: function (result) {
+      axios
+        .post('http://localhost:8081/get_graph', {})
+        .then(function (result) {
+          result = result.data
           if (result.code === 200) {
             _this.pageModel = result.data
             _this.domainList = result.data.nodeList
             _this.matchDomainGraph(_this.domainList[0])
             _this.inputDomainName = ''
           }
-        }
-      })
+        }).catch(function (error) {
+          console.log('get_graph error' + error)
+        })
     },
     matchDomainGraph (domain, event) {
       this.activeId = domain.id
