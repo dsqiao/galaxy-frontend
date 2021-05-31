@@ -26,6 +26,9 @@
         <Drawer :visible.sync="tableDrawer" title="属性表" width="400px">
           <AttributionTable :graph="this.graph"></AttributionTable>
         </Drawer>
+        <Drawer :visible.sync="searchDrawer" title="搜索" width="400px">
+          <search-bar></search-bar>
+        </Drawer>
       </div>
       <GraphContainer
         v-on:setGraph="this.setGraph"
@@ -54,6 +57,7 @@ import Drawer from './components/Drawer.vue'
 import OpSvg from './components/OpSvg'
 import AttributionTable from './components/AttributionTable'
 import NodeAttrEditForm from './components/form/NodeAttrEditForm'
+import SearchBar from './components/SearchBar'
 import { mapMutations } from 'vuex'
 import $ from 'jquery'
 export default {
@@ -66,6 +70,7 @@ export default {
     OpSvg,
     AttributionTable,
     NodeAttrEditForm,
+    SearchBar,
   },
   watch: {
     createNodeMode (val) {
@@ -118,6 +123,7 @@ export default {
       domain: null, // 当前显示哪个图谱
       listDrawer: false, // 图谱列表抽屉是否打开
       tableDrawer: false, // 图谱表格抽屉是否打开
+      searchDrawer: false, // 搜索抽屉是否打开
       createDomainDrawer: false,
       graphMode: true, // 当前处于力导图还是排版
       graph: {
@@ -140,6 +146,10 @@ export default {
         path: require('./assets/svg/refresh.svg'),
         hint: 'refresh',
         click: () => { }
+      }, {
+        path: require('./assets/svg/search.svg'),
+        hint: '搜索',
+        click: () => { _this.searchDrawer = !_this.searchDrawer }
       }, {
         path: require('./assets/svg/circle.svg'),
         activePath: require('./assets/svg/circleActive.svg'),

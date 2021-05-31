@@ -187,10 +187,10 @@ export default {
 
       // 画结点
       {
-        // for (let i of nodes) {
-        //   delete i.fx
-        //   delete i.fy
-        // }
+        for (let i of nodes) {
+          delete i.fx
+          delete i.fy
+        }
         const cleanNodes = JSON.parse(JSON.stringify(nodes)).map(d => Object.create(d))
         const graphWidth = parseInt(this.svg.style('width').slice(0, -2))
         const graphHeight = parseInt(this.svg.style('height').slice(0, -2))
@@ -276,25 +276,25 @@ export default {
               if (!event.active) simulation.alphaTarget(0)
               d.fx = null
               d.fy = null
-              d.fx = event.x
-              d.fy = event.y
-              let domain = this.domain
-              let uuid = d.uuid
-              let fx = d.fx
-              let fy = d.fy
-              let ajaxData = { domain: domain, uuid: uuid, fx: fx, fy: fy }
-              $.ajax({
-                data: ajaxData,
-                type: 'POST',
-                url: 'http://localhost:8081/update_coordinate_of_node',
-                success: function (result) {
-                  if (result.code === 200) {
-                  }
-                },
-                error: function (XMLHttpRequest, textStatus, errorThrown) {
-                  alert(errorThrown)
-                }
-              })
+              // d.fx = event.x
+              // d.fy = event.y
+              // let domain = this.domain
+              // let uuid = d.uuid
+              // let fx = d.fx
+              // let fy = d.fy
+              // let ajaxData = { domain: domain, uuid: uuid, fx: fx, fy: fy }
+              // $.ajax({
+              //   data: ajaxData,
+              //   type: 'POST',
+              //   url: 'http://localhost:8081/update_coordinate_of_node',
+              //   success: function (result) {
+              //     if (result.code === 200) {
+              //     }
+              //   },
+              //   error: function (XMLHttpRequest, textStatus, errorThrown) {
+              //     alert(errorThrown)
+              //   }
+              // })
             })
           )
 
